@@ -1,7 +1,7 @@
 plugins {
     id 'org.springframework.boot' version '2.3.4.RELEASE'
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
-    // id 'com.google.cloud.tools.jib' version '2.8.0'
+    id 'com.google.cloud.tools.jib' version '2.8.0'
     id 'java'
 }
 bootJar {
@@ -14,10 +14,14 @@ jar {
 repositories {
     mavenCentral()
 }
+
 subprojects {
     apply plugin: 'java'
     apply plugin: 'org.springframework.boot'
     apply plugin: 'io.spring.dependency-management'
+    apply plugin: 'com.google.cloud.tools.jib'
+
+    jib.to.image = 'mydomain.com:15000/' + project.name
 
     group = 'com.example.spring.kube'
     version = '1.0-SNAPSHOT'

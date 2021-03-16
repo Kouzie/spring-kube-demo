@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/calculating")
 public class CalculatingController {
 
-    @Value("${test.config.}")
+    @Value("${test}")
     private String test;
 
     private final CalculatingConfiguration config;
