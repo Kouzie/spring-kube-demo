@@ -1,14 +1,35 @@
-apiVersion: skaffold/v2beta10
+apiVersion: skaffold/v4beta2
 kind: Config
 metadata:
-  name: greeting
+  name: k-s
+manifests:
+  rawYaml:
+    - rbac.yaml
+    - config.yaml
+    - calc-deployment.yaml
+    - greet-deployment.yaml
+# build by jib
 build:
   artifacts:
-    - image: mydomain.com:15000/greeting
-      docker:
-        dockerfile: Dockerfile
+    - image: calculating
+      context: ..
+      jib:
+        project: api:calculating
+    - image: greeting
+      context: ..
+      jib:
+        project: api:greeting
+# build by docker,
+# must gradle build before run
+#build:
+#  artifacts:
+#    - image: calculating
+#      context: ../api/calculating
+#      docker:
+#        dockerfile: Dockerfile
+#    - image: greeting
+#      context: ../api/greeting
+#      docker:
+#        dockerfile: Dockerfile
 deploy:
-  kubectl:
-    manifests:
-      - greet-deployment.yaml
-# scaffold run
+  kubectl: {}
