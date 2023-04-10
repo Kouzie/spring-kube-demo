@@ -1,0 +1,14 @@
+apiVersion: skaffold/v2beta10
+kind: Config
+metadata:
+  name: greeting
+build:
+  artifacts:
+    - image: mydomain.com:15000/greeting
+      docker:
+        dockerfile: Dockerfile
+deploy:
+  kubectl:
+    manifests:
+      - greet-deployment.yaml
+# scaffold run

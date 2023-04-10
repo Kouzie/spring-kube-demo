@@ -1,0 +1,68 @@
+plugins {
+    id 'org.springframework.boot' version '2.7.9'
+    id 'io.spring.dependency-management' version '1.0.15.RELEASE'
+    id 'com.google.cloud.tools.jib' version '2.8.0'
+}
+
+subprojects {
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
+    apply plugin: 'com.google.cloud.tools.jib'
+
+    bootJar {
+        enabled = true
+    }
+    jar {
+        enabled = false
+    }
+
+    //jib.to.image = 'mydomain.com:15000/' + project.name
+    jib.from.image = 'openjdk:11'
+    jib.from.platforms {
+        platform {
+            architecture = 'arm64'
+            os = 'linux'
+        }
+    }
+    jib.to.image = "${project.name}"
+    jib.to.tags = ["latest"]
+
+    dependencyManagement {
+        imports {
+            mavenBom "org.springframework.cloud:spring-cloud-dependencies:2021.0.5"
+        }
+    }
+
+    dependencies {
+        implementation 'org.springframework.boot:spring-boot-starter-web'
+        implementation 'org.springframework.boot:spring-boot-starter-validation'
+        implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+        implementation 'org.springframework.cloud:spring-cloud-starter-kubernetes-client-config'
+        implementation 'org.springframework.cloud:spring-cloud-starter-kubernetes-client'
+        implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+        implementation 'org.springframework.cloud:spring-cloud-starter-loadbalancer' // for k8s service loadbalancer
+
+        implementation 'io.micrometer:micrometer-registry-prometheus'
+
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    }
+
+    test {
+        useJUnitPlatform()
+    }
+
+    task buildDockerImage(type: Exec) {
+        print "project dir:${project.projectDir}"
+        workingDir project.projectDir
+        commandLine "docker", "build", "-t", project.name, "."
+    }
+
+    buildDockerImage.dependsOn build
+}
+
+project(':api:greeting') {
+    dependencies {
+        implementation project(':common')
+    }
+}

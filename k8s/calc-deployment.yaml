@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: spring
+  name: calc-deployment
+  labels:
+    app: calc-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: calc-deployment
+  template:
+    metadata:
+      labels:
+        app: calc-deployment
+    spec:
+      containers:
+        - name: calc-deployment
+          # image: mydomain.com:15000/calculating
+          image: calculating
+          imagePullPolicy: Never #이미지가 로컬에 존재할 경우
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: spring
+  name: calc-service
+  labels:
+    app: calc-service
+spec:
+  type: NodePort
+  ports:
+    - port: 8080 # CLUSTER Service 접근 포트
+      nodePort: 30080
+      #targetPort: 8080
+  selector:
+    app: calc-deployment
