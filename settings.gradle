@@ -1,6 +1,7 @@
 rootProject.name = 'spring-kube-demo'
 include ':api:calculating'
 include ':api:greeting'
+include ':api:region'
 include 'common'
 include 'api'
 

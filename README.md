@@ -24,6 +24,13 @@ kubectl apply -f calc-deployment.yaml
 kubectl apply -f greet-deployment.yaml 
 ```
 
-```shell
+### jib & skaffold
 
+```shell
+gradle :api:greeting:jibDockerBuild
+gradle :api:calculating:jibDockerBuild
+
+cd k8s
+skaffold dev
 ```
+
