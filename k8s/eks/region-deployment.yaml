@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: region-app
+  labels:
+    app: region-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: region-app
+  template:
+    metadata:
+      labels:
+        app: region-app
+    spec:
+      containers:
+        - name: region-app
+          image: ${ECR_REGION_URL}
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: DB_URL
+              valueFrom:
+                secretKeyRef:
+                  key: db-url
+                  name: db-config
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: db-username
+                  name: db-config
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: db-password
+                  name: db-config
+          readinessProbe:
+            httpGet:
+              port: 8080
+              path: /health
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          livenessProbe:
+            httpGet:
+              port: 8080
+              path: /health
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 100m
+              memory: 512Mi
+            limits:
+              cpu: 250m
+              memory: 768Mi
+          lifecycle:
+            preStop:
+              exec:
+                command: [ "/bin/sh", "-c", "sleep 2" ]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: region-app-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: region-app
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080

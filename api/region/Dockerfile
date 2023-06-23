@@ -1,13 +1,14 @@
 FROM amazoncorretto:11
 LABEL maintainer="k8sbook"
 
+
 RUN yum install -y glibc-langpack-ko
 ENV LANG ko_KR.UTF8
 ENV LC_ALL ko_KR.UTF8
 RUN ln -sf /usr/share/zoneinfo/Asia/Seoul /etc/localtime
 
 VOLUME /tmp
-ARG JAR_FILE
+ARG JAR_FILE=build/libs/*.jar
 COPY ${JAR_FILE} app.jar
 
 ENTRYPOINT ["java", \
