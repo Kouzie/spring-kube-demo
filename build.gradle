@@ -27,9 +27,3 @@ subprojects {
         testAnnotationProcessor 'org.projectlombok:lombok:1.18.26'
     }
 }
-
-project(':api:greeting') {
-    dependencies {
-        implementation project(':common')
-    }
-}
