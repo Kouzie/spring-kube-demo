@@ -1,4 +1,4 @@
-FROM openjdk:11
+FROM docker.io/library/openjdk:11
 # gradle
 ARG JAR_FILE=build/libs/*.jar
 # maven

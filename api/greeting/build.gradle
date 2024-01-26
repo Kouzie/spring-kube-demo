@@ -1,6 +1,0 @@
-
-dependencies {
-    implementation 'org.springframework.cloud:spring-cloud-starter-kubernetes-client-config'
-    implementation 'org.springframework.cloud:spring-cloud-starter-kubernetes-client'
-    implementation 'org.springframework.cloud:spring-cloud-starter-loadbalancer' // for k8s service loadbalancer
-}

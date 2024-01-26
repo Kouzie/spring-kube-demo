@@ -9,7 +9,7 @@ import java.io.IOException;
 
 @Slf4j
 @Component
-public class ErrorFilter implements Filter {
+public class RequestFilter implements Filter {
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         log.info("client:{}, URL:{}", request.getLocalAddr(), ((HttpServletRequest) request).getRequestURI());

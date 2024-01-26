@@ -2,23 +2,28 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   namespace: spring
-  name: calc-deployment
+  name: greet-deployment
   labels:
-    app: calc-deployment
+    app: greet-deployment
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: calc-deployment
+      app: greet-deployment
   template:
     metadata:
       labels:
-        app: calc-deployment
+        app: greet-deployment
     spec:
       containers:
-        - name: calc-deployment
-          image: ${ECR_REGION_URL}
+        - name: greet-deployment
+          image: ${REGISTRY_URL}/greeting:latest
+          # image: greeting
+          # imagePullPolicy: Never # 이미지가 로컬에 존재할 경우
           imagePullPolicy: Always
+          envFrom:
+            - secretRef:
+                name: greeting-secret
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness
@@ -37,11 +42,12 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: calc-service
+  name: greet-service
+  namespace: spring
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
-    app: calc-deployment
+    app: greet-deployment
   ports:
     - protocol: TCP
       port: 8080

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kube.demo.calculating.client.CalculatingClient;
 import com.kube.demo.common.HelloJava;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,9 +20,12 @@ public class GreetingController {
     private final CalculatingClient calculatingClient;
     private final ObjectMapper objectMapper;
 
+    @Value("${greeting.message}")
+    private String greetingMessage;
+
     @GetMapping
     public String greet() throws JsonProcessingException {
-        HelloJava helloJava = new HelloJava("Hello World", LocalDateTime.now());
+        HelloJava helloJava = new HelloJava(greetingMessage, LocalDateTime.now());
         return objectMapper.writeValueAsString(helloJava);
     }
 

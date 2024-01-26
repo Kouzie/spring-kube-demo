@@ -16,7 +16,9 @@ spec:
     spec:
       containers:
         - name: region-app
-          image: ${ECR_REGION_URL}
+          image: ${REGISTRY_URL:=core.harbor.domain/library}/region:latest
+          # image: region
+          # imagePullPolicy: Never # 이미지가 로컬에 존재할 경우
           imagePullPolicy: Always
           ports:
             - containerPort: 8080

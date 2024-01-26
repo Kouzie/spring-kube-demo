@@ -2,8 +2,8 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  namespace: spring
   name: demo-config
+  namespace: spring
 data:
   application.properties: |
     TEST_STRING=Hello Test

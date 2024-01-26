@@ -11,16 +11,22 @@ subprojects {
 
     jar.enabled = false
 
-    jib.from.image = 'openjdk:11'
-//    jib.to.image = 'mydomain.com:15000/' + project.name
-//    jib.from.platforms {
-//        platform {
-//            architecture = 'arm64'
-//            os = 'linux'
-//        }
-//    }
-    jib.to.image = "${project.name}"
-    jib.to.tags = ["latest"]
+    def url = project.properties["registryUrl"].toString()
+    def username = project.properties["registryUsername"].toString()
+    def password = project.properties["registryPassword"].toString()
+
+    jib {
+        from {
+            image = 'docker.io/library/openjdk:11'
+        }
+        to {
+            image = "${url}/${project.name}"
+            tags = ["latest"]
+            setAllowInsecureRegistries(true) // docker registry 사설 인증서 허용
+            auth.username = username
+            auth.password = password
+        }
+    }
 
     dependencyManagement {
         imports {
