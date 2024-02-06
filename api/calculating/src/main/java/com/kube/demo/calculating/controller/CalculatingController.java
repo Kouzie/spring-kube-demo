@@ -22,11 +22,13 @@ public class CalculatingController {
 
     @GetMapping
     public String calc() {
+        log.info("calc invoked");
         return config.getTest() + ":" + demo;
     }
 
     @GetMapping("/{num1}/{num2}")
     public Long addNumbers(@PathVariable Long num1, @PathVariable Long num2) {
+        log.info("addNumbers invoked, num1:{}, num2:{}", num1, num2);
         Long result = num1 + num2;
         return result;
     }
