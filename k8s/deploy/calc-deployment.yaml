@@ -15,6 +15,8 @@ spec:
       labels:
         app: calc-deployment
     spec:
+      imagePullSecrets:
+        - name: regcred
       containers:
         - name: calc-deployment
           image: ${REGISTRY_URL}/calculating:latest

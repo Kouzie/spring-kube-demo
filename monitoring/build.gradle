@@ -1,0 +1,22 @@
+plugins {
+    id "org.springframework.boot"
+    id "io.spring.dependency-management"
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "io.opentelemetry:opentelemetry-bom:1.34.1"
+    }
+}
+
+dependencies {
+    def OPENTELEMETRY_VERSION = "2.0.0-alpha"
+    implementation "ch.qos.logback.contrib:logback-json-classic:0.1.5"
+    implementation "ch.qos.logback.contrib:logback-jackson:0.1.5"
+
+    implementation "org.springframework.boot:spring-boot-starter-actuator"
+    implementation "io.opentelemetry:opentelemetry-sdk"
+    implementation "io.opentelemetry:opentelemetry-exporter-otlp"
+
+    implementation "io.opentelemetry.instrumentation:opentelemetry-logback-appender-1.0:$OPENTELEMETRY_VERSION"
+}

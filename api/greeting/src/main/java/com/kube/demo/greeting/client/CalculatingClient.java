@@ -1,4 +1,4 @@
-package com.kube.demo.calculating.client;
+package com.kube.demo.greeting.client;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;

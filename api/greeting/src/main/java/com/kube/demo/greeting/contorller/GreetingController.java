@@ -1,8 +1,8 @@
-package com.kube.demo.calculating.contorller;
+package com.kube.demo.greeting.contorller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kube.demo.calculating.client.CalculatingClient;
+import com.kube.demo.greeting.client.CalculatingClient;
 import com.kube.demo.common.HelloJava;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;

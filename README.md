@@ -3,18 +3,20 @@
 
 `[greeting, calculating]` 는 단순 Spring Application 임으로 `docker desktop k8s` 에서 실행가능  
 
+사전에 harbor 와 같은 private registry 설치 후 진행  
+
 ### docker image build & push 
 
 Dockerimage 로 생성
 
 ```shell
 # api/greeting 위치에서 실행
-gradle build && docker build -t greeting .
+./gradlew build && docker build -t greeting .
 docker tag greeting core.harbor.domain/demo/greeting:latest
 docker push core.harbor.domain/demo/greeting:latest
 
 # api/calculating 위치에서 실행
-gradle build && docker build -t calculating .
+./gradlew build && docker build -t calculating .
 docker tag calculating core.harbor.domain/demo/calculating:latest
 docker push core.harbor.domain/demo/calculating:latest
 ```
@@ -22,12 +24,12 @@ docker push core.harbor.domain/demo/calculating:latest
 jib 으로 생성
 
 ```sh
-gradle clean api:calculating:jib \
+./gradlew clean api:calculating:jib \
     -PregistryUrl=core.harbor.domain/demo \
     -PregistryUsername=admin \
     -PregistryPassword=Harbor12345
 
-gradle clean api:greeting:jib \
+./gradlew clean api:greeting:jib \
     -PregistryUrl=core.harbor.domain/demo \
     -PregistryUsername=admin \
     -PregistryPassword=Harbor12345
@@ -43,6 +45,15 @@ GREETING_MESSAGE=Hello_k8s \
 envsubst < k8s/config/greeting-secret.yaml | \
 kubectl apply -f -
 
+# private registry 인증을 위한 secret
+HARBOR_DOCKER_AUTH=$(echo -n 'admin:Harbor12345' | base64) \
+HARBOR_DOCKER_CONFIG_JSON=$(echo -n '{"auths": {"core.harbor.domain": {"auth": "'$HARBOR_DOCKER_AUTH'"}}}' | base64) \
+envsubst < k8s/config/registry-secret.yaml | \
+kubectl apply -f -
+```
+
+
+```shell
 # calculating deployment 생성
 REGISTRY_URL=core.harbor.domain/demo \
 envsubst < k8s/deploy/calc-deployment.yaml | \
@@ -53,7 +64,6 @@ REGISTRY_URL=core.harbor.domain/demo \
 envsubst < k8s/deploy/greet-deployment.yaml | \
 kubectl apply -f -
 ```
-
 
 ### test
 
@@ -82,7 +92,7 @@ Dockerimage 로 생성
 aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.ap-northeast-2.amazonaws.com
 
 # api/region 위치에서 실행
-gradle build && docker build -t region .
+./gradlew build && docker build -t region .
 docker tag region-repo:latest $ACCOUNT_ID.dkr.ecr.ap-northeast-2.amazonaws.com/region-repo:latest
 docker push $ACCOUNT_ID.dkr.ecr.ap-northeast-2.amazonaws.com/region-repo:latest
 ```
@@ -92,7 +102,7 @@ jib 으로 생성
 ```sh
 ACCOUNT_ID=55... \
 ECR_PASSWORD=$(aws ecr get-login-password --region ap-northeast-2) \
-gradle clean api:region:jib \
+./gradlew clean api:region:jib \
     -PregistryUrl=$ACCOUNT_ID.dkr.ecr.ap-northeast-2.amazonaws.com \
     -PregistryUsername=AWS \
     -PregistryPassword=$ECR_PASSWORD

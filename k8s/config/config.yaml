@@ -4,8 +4,10 @@ kind: ConfigMap
 metadata:
   name: demo-config
   namespace: spring
+
 data:
-  application.properties: |
-    TEST_STRING=Hello Test
-    calc.test=Hello Calc
-    demo=Hello Demo
+  application.properties: |-
+    TRACING_URL: http://opentelemetry-collecor-opentelemetry-collector.monitoring.svc.cluster.local:4317
+    TEST_STRING: "Hello Test"
+    demo: "Hello Demo"
+    calc.test: "Hello Calc"

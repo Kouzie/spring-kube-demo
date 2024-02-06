@@ -1,7 +1,20 @@
+pluginManagement {
+    plugins {
+        id 'org.springframework.boot' version '3.1.8'
+        id 'io.spring.dependency-management' version '1.1.4'
+        id 'com.google.cloud.tools.jib' version '3.2.0'
+    }
+    repositories {
+        mavenCentral()
+        gradlePluginPortal()
+        google()
+    }
+}
+
 rootProject.name = 'spring-kube-demo'
 include ':api:calculating'
 include ':api:greeting'
 include ':api:region'
 include 'common'
 include 'api'
-
+include 'monitoring'

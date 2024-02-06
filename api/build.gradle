@@ -1,7 +1,7 @@
 plugins {
-    id 'org.springframework.boot' version '2.7.9' apply false
-    id 'io.spring.dependency-management' version '1.0.15.RELEASE'
-    id 'com.google.cloud.tools.jib' version '3.2.0'
+    id 'org.springframework.boot' apply false
+    id 'io.spring.dependency-management' apply false
+    id 'com.google.cloud.tools.jib' apply false
 }
 
 subprojects {
@@ -17,7 +17,7 @@ subprojects {
 
     jib {
         from {
-            image = 'docker.io/library/openjdk:11'
+            image = 'docker.io/library/openjdk:17'
         }
         to {
             image = "${url}/${project.name}"
@@ -30,19 +30,20 @@ subprojects {
 
     dependencyManagement {
         imports {
-            mavenBom "org.springframework.cloud:spring-cloud-dependencies:2021.0.5"
+            mavenBom "org.springframework.cloud:spring-cloud-dependencies:2022.0.5"
+            mavenBom "io.opentelemetry:opentelemetry-bom:1.34.1"
         }
     }
 
     dependencies {
         implementation project(':common')
+        implementation project(':monitoring')
+
+        implementation "io.opentelemetry:opentelemetry-sdk"
+        implementation "io.opentelemetry:opentelemetry-exporter-otlp"
         implementation 'org.springframework.boot:spring-boot-starter-web'
         implementation 'org.springframework.boot:spring-boot-starter-validation'
-        implementation 'org.springframework.boot:spring-boot-starter-actuator'
-
         implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
-
-        implementation 'io.micrometer:micrometer-registry-prometheus'
 
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
     }
