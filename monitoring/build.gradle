@@ -13,10 +13,14 @@ dependencies {
     def OPENTELEMETRY_VERSION = "2.0.0-alpha"
     implementation "ch.qos.logback.contrib:logback-json-classic:0.1.5"
     implementation "ch.qos.logback.contrib:logback-jackson:0.1.5"
-
     implementation "org.springframework.boot:spring-boot-starter-actuator"
     implementation "io.opentelemetry:opentelemetry-sdk"
     implementation "io.opentelemetry:opentelemetry-exporter-otlp"
 
+    // 해당 imports 가 있어야 trace 관련 설정이 로그에도 들어가고 trace 관측데이터가 전달됨
+    implementation "io.micrometer:micrometer-tracing-bridge-otel" // for trace must be exist
+
     implementation "io.opentelemetry.instrumentation:opentelemetry-logback-appender-1.0:$OPENTELEMETRY_VERSION"
+    // implementation "io.opentelemetry.instrumentation:opentelemetry-logback-mdc-1.0:$OPENTELEMETRY_VERSION"
+
 }
