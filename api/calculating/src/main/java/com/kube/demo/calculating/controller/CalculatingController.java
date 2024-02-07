@@ -1,6 +1,7 @@
 package com.kube.demo.calculating.controller;
 
 import com.kube.demo.calculating.config.CalculatingConfiguration;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,6 +18,7 @@ public class CalculatingController {
 
     @Value("${demo}")
     private String demo;
+    private final MeterRegistry registry;
 
     private final CalculatingConfiguration config;
 
@@ -29,6 +31,8 @@ public class CalculatingController {
     @GetMapping("/{num1}/{num2}")
     public Long addNumbers(@PathVariable Long num1, @PathVariable Long num2) {
         log.info("addNumbers invoked, num1:{}, num2:{}", num1, num2);
+        registry.counter("item.num", "num", num1.toString()).increment();
+        registry.counter("item.num", "num", num2.toString()).increment();
         Long result = num1 + num2;
         return result;
     }
