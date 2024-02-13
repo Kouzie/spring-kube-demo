@@ -7,7 +7,7 @@ metadata:
 
 data:
   application.properties: |-
-    TRACING_URL: http://opentelemetry-collecor-opentelemetry-collector.monitoring.svc.cluster.local:4317
     TEST_STRING: "Hello Test"
     demo: "Hello Demo"
     calc.test: "Hello Calc"
+    TRACING_URL: http://localhost:4317

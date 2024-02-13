@@ -1,0 +1,43 @@
+apiVersion: opentelemetry.io/v1alpha1
+kind: OpenTelemetryCollector
+metadata:
+  name: sidecar-for-spring
+  namespace: spring
+spec:
+  mode: sidecar
+  config: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317 # 모든 입력 IP 허용
+      prometheus:
+        config:
+          scrape_configs:
+          - job_name: 'spring-kube-demo'
+            scrape_interval: 1m
+            static_configs:
+            - targets: ["0.0.0.0:9404"]
+            metrics_path: "/actuator/prometheus"
+    processors:
+    exporters:
+      logging: {}
+      otlp:
+        endpoint: "http://opentelemetry-collecor-opentelemetry-collector.monitoring.svc.cluster.local:4317"
+        tls:
+          insecure: true
+
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: []
+          exporters: [logging, otlp]
+        logs:
+          receivers: [otlp]
+          processors: []
+          exporters: [logging, otlp]
+        metrics:
+          receivers: [otlp, prometheus]
+          processors: []
+          exporters: [logging, otlp]

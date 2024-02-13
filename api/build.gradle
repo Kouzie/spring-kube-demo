@@ -43,9 +43,9 @@ subprojects {
         implementation 'org.springframework.boot:spring-boot-starter-web'
         implementation 'org.springframework.boot:spring-boot-starter-validation'
         implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+        implementation "io.opentelemetry:opentelemetry-api"
         implementation 'io.github.openfeign:feign-micrometer:12.3'
         testImplementation 'org.springframework.boot:spring-boot-starter-test'
-
     }
 
     test {

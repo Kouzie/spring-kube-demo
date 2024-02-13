@@ -1,6 +1,7 @@
 package com.kube.demo.monitoring.config;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.exporter.otlp.logs.OtlpGrpcLogRecordExporter;
@@ -43,7 +44,6 @@ public class OtlpConfig {
                                 .build())
                 .setResource(resource)
                 .build();
-
         SdkMeterProvider sdkMeterProvider = SdkMeterProvider.builder()
                 .registerMetricReader(
                         PeriodicMetricReader
@@ -51,7 +51,6 @@ public class OtlpConfig {
                                 .build())
                 .setResource(resource)
                 .build();
-
         SdkLoggerProvider sdkLoggerProvider = SdkLoggerProvider.builder()
                 .addLogRecordProcessor(
                         BatchLogRecordProcessor
@@ -59,7 +58,6 @@ public class OtlpConfig {
                                 .build())
                 .setResource(resource)
                 .build();
-
         OpenTelemetry openTelemetry = OpenTelemetrySdk.builder()
                 .setTracerProvider(sdkTracerProvider)
                 .setMeterProvider(sdkMeterProvider)
@@ -69,5 +67,13 @@ public class OtlpConfig {
         // install log agent in log appender
         OpenTelemetryAppender.install(openTelemetry);
         return openTelemetry;
+    }
+
+    @Bean
+    public Meter customMeter(OpenTelemetry openTelemetry) {
+        Meter meter = openTelemetry.meterBuilder("instrumentation-library-name")
+                .setInstrumentationVersion("1.0.0")
+                .build();
+        return meter;
     }
 }

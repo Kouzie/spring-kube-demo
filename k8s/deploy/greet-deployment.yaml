@@ -14,6 +14,8 @@ spec:
     metadata:
       labels:
         app: greet-deployment
+      annotations:
+        sidecar.opentelemetry.io/inject: "sidecar-for-spring" # pod 에 sidecar 삽입
     spec:
       imagePullSecrets:
         - name: regcred
@@ -31,13 +33,13 @@ spec:
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness
-              port: 8080
+              port: 9404
             initialDelaySeconds: 15
             periodSeconds: 15
           readinessProbe:
             httpGet:
               path: /actuator/health/readiness
-              port: 8080
+              port: 9404
             initialDelaySeconds: 15
             periodSeconds: 15
           ports:

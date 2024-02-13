@@ -124,3 +124,21 @@ REGISTRY_URL=$ACCOUNT_ID.dkr.ecr.ap-northeast-2.amazonaws.com \
 envsubst < k8s/deploy/region-deployment.yaml | \
 kubectl apply -f -
 ```
+
+### Monitoring
+
+sidecar 방식으로 otel 컬렉터 설치
+
+> <https://github.com/open-telemetry/opentelemetry-operator>  
+> <https://opentelemetry.io/docs/kubernetes/operator/>  
+> <https://cert-manager.io/docs/installation/helm/>
+
+```shell
+# cert-manager 설치
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.14.2/cert-manager.yaml
+kubectl get all -n cert-manager
+
+# opentelemetry-operator 설치
+kubectl apply -f https://github.com/open-telemetry/opentelemetry-operator/releases/latest/download/opentelemetry-operator.yaml
+kubectl get all -n opentelemetry-operator-system
+```

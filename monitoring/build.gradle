@@ -19,7 +19,8 @@ dependencies {
 
     // 해당 imports 가 있어야 trace 관련 설정이 로그에도 들어가고 trace 관측데이터가 전달됨
     implementation "io.micrometer:micrometer-tracing-bridge-otel" // for trace must be exist
-
+    // prometheus meter registry 등록
+    implementation "io.micrometer:micrometer-registry-prometheus"
     implementation "io.opentelemetry.instrumentation:opentelemetry-logback-appender-1.0:$OPENTELEMETRY_VERSION"
     // implementation "io.opentelemetry.instrumentation:opentelemetry-logback-mdc-1.0:$OPENTELEMETRY_VERSION"
 
