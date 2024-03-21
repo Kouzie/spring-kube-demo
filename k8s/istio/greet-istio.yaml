@@ -4,7 +4,7 @@ kind: DestinationRule
 apiVersion: networking.istio.io/v1beta1
 metadata:
   namespace: spring
-  name: greet-service
+  name: greet-destination-rule
 spec:
   host: greet-service.spring.svc.cluster.local
 ---

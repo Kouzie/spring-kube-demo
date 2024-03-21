@@ -2,7 +2,7 @@ kind: DestinationRule
 apiVersion: networking.istio.io/v1beta1
 metadata:
   namespace: spring
-  name: calc-service
+  name: calc-destination-rule
 spec:
   host: calc-service.spring.svc.cluster.local
   subsets:
@@ -12,8 +12,13 @@ spec:
     - name: poison
       labels:
         version: poison
+  trafficPolicy:
+    outlierDetection:
+      consecutive5xxErrors: 1 # default 5, 5XX 에러발생 횟수
+      interval: 10s # default 10s
+      baseEjectionTime: 1m # default 30s
+      maxEjectionPercent: 100 # default 10%
 ---
-
 
 kind: VirtualService
 apiVersion: networking.istio.io/v1beta1
@@ -25,12 +30,12 @@ spec:
     - route:
         - destination:
             host: calc-service.spring.svc.cluster.local
-            subset: normal
-          weight: 100
-        - destination:
-            host: calc-service.spring.svc.cluster.local
-            subset: poison
-          weight: 0
+#            subset: normal
+#          weight: 50
+#        - destination:
+#            host: calc-service.spring.svc.cluster.local
+#            subset: poison
+#          weight: 50
   hosts:
     - calc-service.spring.svc.cluster.local
 
@@ -46,12 +51,12 @@ spec:
     - route:
         - destination:
             host: calc-service.spring.svc.cluster.local
-            subset: normal
-          weight: 100
-        - destination:
-            host: calc-service.spring.svc.cluster.local
-            subset: poison
-          weight: 0
+#            subset: normal
+#          weight: 50
+#        - destination:
+#            host: calc-service.spring.svc.cluster.local
+#            subset: poison
+#          weight: 50
   hosts:
     - calc.kube.demo.com
   gateways:
