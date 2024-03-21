@@ -1,0 +1,17 @@
+kind: Gateway
+apiVersion: networking.istio.io/v1beta1
+metadata:
+  namespace: spring
+  name: spring-kube-demo-gateway
+spec:
+  # The selector matches the ingress gateway pod labels.
+  # If you installed Istio using Helm following the standard documentation, this would be "istio=ingress"
+  selector:
+    istio: ingressgateway # gateway controller 중 label 이 istio=ingressageteway 인 pod 를 사용할 gateway 로 지정
+  servers:
+    - port:
+        number: 8080 # load balanacer 의 port 와 매핑
+        name: http
+        protocol: HTTP
+      hosts:
+        - "*.kube.demo.com" # 라우팅할 hosts, 여러개 지정 가능

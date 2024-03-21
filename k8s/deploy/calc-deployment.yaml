@@ -2,26 +2,76 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   namespace: spring
-  name: calc-deployment
+  name: calc-deployment-normal
   labels:
-    app: calc-deployment
+    app: calc-app
+    version: nomal
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: calc-deployment
+      app: calc-app
+      version: normal
   template:
     metadata:
       labels:
-        app: calc-deployment
+        app: calc-app
+        version: normal
       annotations:
         sidecar.opentelemetry.io/inject: "sidecar-for-spring" # pod 에 sidecar 삽입
     spec:
       imagePullSecrets:
         - name: regcred
       containers:
-        - name: calc-deployment
+        - name: calc-app
           image: ${REGISTRY_URL}/calculating:latest
+          # image: calculating
+          # imagePullPolicy: Never # 이미지가 로컬에 존재할 경우
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 9404
+            initialDelaySeconds: 15
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 9404
+            initialDelaySeconds: 15
+            periodSeconds: 15
+          ports:
+            - containerPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: spring
+  name: calc-deployment-poison
+  labels:
+    app: calc-app
+    version: poison
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: calc-app
+      version: poison
+  template:
+    metadata:
+      labels:
+        app: calc-app
+        version: poison
+      annotations:
+        sidecar.opentelemetry.io/inject: "sidecar-for-spring" # pod 에 sidecar 삽입
+    spec:
+      imagePullSecrets:
+        - name: regcred
+      containers:
+        - name: calc-app
+          image: ${REGISTRY_URL}/calculating:latest
+          env:
+            - name: IS_POISON
+              value: "true"
           # image: calculating
           # imagePullPolicy: Never # 이미지가 로컬에 존재할 경우
           livenessProbe:
@@ -45,10 +95,9 @@ metadata:
   name: calc-service
   namespace: spring
 spec:
-  type: ClusterIP
   selector:
-    app: calc-deployment
+    app: calc-app
   ports:
-    - protocol: TCP
+    - name: http
       port: 8080
       targetPort: 8080

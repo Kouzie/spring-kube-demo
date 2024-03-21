@@ -1,0 +1,59 @@
+kind: DestinationRule
+apiVersion: networking.istio.io/v1beta1
+metadata:
+  namespace: spring
+  name: calc-service
+spec:
+  host: calc-service.spring.svc.cluster.local
+  subsets:
+    - name: normal
+      labels:
+        version: normal
+    - name: poison
+      labels:
+        version: poison
+---
+
+
+kind: VirtualService
+apiVersion: networking.istio.io/v1beta1
+metadata:
+  namespace: spring
+  name: calc-virtual-service
+spec:
+  http:
+    - route:
+        - destination:
+            host: calc-service.spring.svc.cluster.local
+            subset: normal
+          weight: 100
+        - destination:
+            host: calc-service.spring.svc.cluster.local
+            subset: poison
+          weight: 0
+  hosts:
+    - calc-service.spring.svc.cluster.local
+
+---
+
+kind: VirtualService
+apiVersion: networking.istio.io/v1beta1
+metadata:
+  namespace: spring
+  name: calc-virtual-service-for-gateway
+spec:
+  http:
+    - route:
+        - destination:
+            host: calc-service.spring.svc.cluster.local
+            subset: normal
+          weight: 100
+        - destination:
+            host: calc-service.spring.svc.cluster.local
+            subset: poison
+          weight: 0
+  hosts:
+    - calc.kube.demo.com
+  gateways:
+    - spring-kube-demo-gateway
+---

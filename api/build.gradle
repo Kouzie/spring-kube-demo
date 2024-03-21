@@ -14,6 +14,10 @@ subprojects {
     def url = project.properties["registryUrl"].toString()
     def username = project.properties["registryUsername"].toString()
     def password = project.properties["registryPassword"].toString()
+    def tagsInput = project.properties['tags'].toString()
+    if (tagsInput == null || tagsInput.trim().isEmpty()) {
+        tagsInput = 'latest'
+    }
 
     jib {
         from {
@@ -21,7 +25,7 @@ subprojects {
         }
         to {
             image = "${url}/${project.name}"
-            tags = ["latest"]
+            tags = tagsInput.split(",").toList()
             setAllowInsecureRegistries(true) // docker registry 사설 인증서 허용
             auth.username = username
             auth.password = password

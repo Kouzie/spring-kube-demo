@@ -4,16 +4,16 @@ metadata:
   namespace: spring
   name: greet-deployment
   labels:
-    app: greet-deployment
+    app: greet-app
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: greet-deployment
+      app: greet-app
   template:
     metadata:
       labels:
-        app: greet-deployment
+    app: greet-app
       annotations:
         sidecar.opentelemetry.io/inject: "sidecar-for-spring" # pod 에 sidecar 삽입
     spec:
