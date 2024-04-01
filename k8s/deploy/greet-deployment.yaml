@@ -6,22 +6,22 @@ metadata:
   labels:
     app: greet-app
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: greet-app
   template:
     metadata:
       labels:
-    app: greet-app
+        app: greet-app
       annotations:
-        sidecar.opentelemetry.io/inject: "sidecar-for-spring" # pod 에 sidecar 삽입
+        sidecar.opentelemetry.io/inject: "sidecar-for-spring"
     spec:
       imagePullSecrets:
         - name: regcred
       containers:
         - name: greet-deployment
-          image: ${REGISTRY_URL}/greeting:latest
+          image: ${REGISTRY_URL}/greeting:0.0.1
           # image: greeting
           # imagePullPolicy: Never # 이미지가 로컬에 존재할 경우
           imagePullPolicy: Always
@@ -51,9 +51,10 @@ metadata:
   name: greet-service
   namespace: spring
 spec:
-  type: ClusterIP
+  sessionAffinity: None # ClientIP
+  type: LoadBalancer
   selector:
-    app: greet-deployment
+    app: greet-app
   ports:
     - protocol: TCP
       port: 8080

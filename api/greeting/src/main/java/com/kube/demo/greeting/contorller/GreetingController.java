@@ -73,12 +73,14 @@ public class GreetingController {
 
     }
 
+    @Value("${image.version}")
+    private String version;
 
     @GetMapping
     public String greet() throws JsonProcessingException {
         log.info("greet invoked");
         counter.increment(1);
-        HelloJava helloJava = new HelloJava(greetingMessage, LocalDateTime.now());
+        HelloJava helloJava = new HelloJava(greetingMessage + ", version:" + version, LocalDateTime.now());
         return objectMapper.writeValueAsString(helloJava);
     }
 

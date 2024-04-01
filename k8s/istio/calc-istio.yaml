@@ -16,8 +16,8 @@ spec:
     outlierDetection:
       consecutive5xxErrors: 1 # default 5, 5XX 에러발생 횟수
       interval: 10s # default 10s
-      baseEjectionTime: 1m # default 30s
-      maxEjectionPercent: 100 # default 10%
+      baseEjectionTime: 30s # default 30s
+      maxEjectionPercent: 50 # default 10%
 ---
 
 kind: VirtualService

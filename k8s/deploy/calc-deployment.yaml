@@ -95,6 +95,8 @@ metadata:
   name: calc-service
   namespace: spring
 spec:
+  sessionAffinity: None # ClientIP
+  type: LoadBalancer
   selector:
     app: calc-app
   ports:

@@ -25,11 +25,14 @@ jib 으로 생성
 
 ```sh
 ./gradlew clean api:calculating:jib \
+    -Ptags=latest \
     -PregistryUrl=core.harbor.domain/demo \
     -PregistryUsername=admin \
     -PregistryPassword=Harbor12345
 
+
 ./gradlew clean api:greeting:jib \
+    -Ptags=latest \
     -PregistryUrl=core.harbor.domain/demo \
     -PregistryUsername=admin \
     -PregistryPassword=Harbor12345
@@ -39,19 +42,23 @@ jib 으로 생성
 
 ```shell
 kubectl apply -f k8s/namespace.yaml
+kubectl apply -f k8s/rbac.yaml
 kubectl apply -f k8s/config/config.yaml
 
 GREETING_MESSAGE=Hello_k8s \
 envsubst < k8s/config/greeting-secret.yaml | \
 kubectl apply -f -
+```
 
+#### 서비스 배포
+
+```sh
 # private registry 인증을 위한 secret
 HARBOR_DOCKER_AUTH=$(echo -n 'admin:Harbor12345' | base64) \
 HARBOR_DOCKER_CONFIG_JSON=$(echo -n '{"auths": {"core.harbor.domain": {"auth": "'$HARBOR_DOCKER_AUTH'"}}}' | base64) \
 envsubst < k8s/config/registry-secret.yaml | \
 kubectl apply -f -
 ```
-
 
 ```shell
 # calculating deployment 생성
@@ -100,15 +107,46 @@ docker push $ACCOUNT_ID.dkr.ecr.ap-northeast-2.amazonaws.com/region-repo:latest
 jib 으로 생성
 
 ```sh
-ACCOUNT_ID=55... \
-ECR_PASSWORD=$(aws ecr get-login-password --region ap-northeast-2) \
-./gradlew clean api:region:jib \
+ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text) \
+&& ECR_PASSWORD=$(aws ecr get-login-password --region ap-northeast-2) \
+&& ./gradlew clean api:greeting:jib \
+    -Ptags=0.0.1 \
+    -PregistryUrl=$ACCOUNT_ID.dkr.ecr.ap-northeast-2.amazonaws.com \
+    -PregistryUsername=AWS \
+    -PregistryPassword=$ECR_PASSWORD
+
+ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text) \
+&& ECR_PASSWORD=$(aws ecr get-login-password --region ap-northeast-2) \
+&& ./gradlew clean api:calculating:jib \
+    -Ptags=latest \
+    -PregistryUrl=$ACCOUNT_ID.dkr.ecr.ap-northeast-2.amazonaws.com \
+    -PregistryUsername=AWS \
+    -PregistryPassword=$ECR_PASSWORD
+```
+
+```sh
+ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text) \
+&& ECR_PASSWORD=$(aws ecr get-login-password --region ap-northeast-2) \
+&& ./gradlew clean api:region:jib \
+    -Ptags=latest \
     -PregistryUrl=$ACCOUNT_ID.dkr.ecr.ap-northeast-2.amazonaws.com \
     -PregistryUsername=AWS \
     -PregistryPassword=$ECR_PASSWORD
 ```
 
 ### k8s resource 생성
+
+```sh
+ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text) \
+REGISTRY_URL=$ACCOUNT_ID.dkr.ecr.ap-northeast-2.amazonaws.com \
+envsubst < k8s/deploy/calc-deployment.yaml | \
+kubectl apply -f -
+
+ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text) \
+REGISTRY_URL=$ACCOUNT_ID.dkr.ecr.ap-northeast-2.amazonaws.com \
+envsubst < k8s/deploy/greet-deployment.yaml | \
+kubectl apply -f -
+```
 
 ```shell
 # secret 생성
@@ -119,7 +157,7 @@ envsubst < k8s/eks/db-secret.yaml | \
 kubectl apply -f -
 
 # region deployment 생성
-ACCOUNT_ID=55... \
+ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text) \
 REGISTRY_URL=$ACCOUNT_ID.dkr.ecr.ap-northeast-2.amazonaws.com \
 envsubst < k8s/deploy/region-deployment.yaml | \
 kubectl apply -f -
