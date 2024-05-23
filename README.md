@@ -180,3 +180,12 @@ kubectl get all -n cert-manager
 kubectl apply -f https://github.com/open-telemetry/opentelemetry-operator/releases/latest/download/opentelemetry-operator.yaml
 kubectl get all -n opentelemetry-operator-system
 ```
+
+#### local test
+
+Otel Collector 를 로컬에서 실행
+
+```shell
+cd docker
+docker-compose up -d
+```

@@ -37,6 +37,8 @@ public class GreetingController {
     private AtomicLong result = new AtomicLong(0);
     private DistributionSummary summary;
     private Timer timer;
+    // opentelemetry meter
+    private Meter meter;
 
     @PostConstruct
     private void init() {
@@ -70,7 +72,6 @@ public class GreetingController {
                         Duration.ofMillis(1000) // 1000ms
                 )
                 .register(registry);
-
     }
 
     @Value("${image.version}")

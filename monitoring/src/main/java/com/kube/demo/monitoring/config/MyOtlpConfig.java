@@ -1,5 +1,9 @@
 package com.kube.demo.monitoring.config;
 
+import io.micrometer.core.instrument.Clock;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.registry.otlp.OtlpConfig;
+import io.micrometer.registry.otlp.OtlpMeterRegistry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
@@ -20,13 +24,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.time.Duration;
+
 import static io.opentelemetry.semconv.ResourceAttributes.*;
 
 /**
  * https://opentelemetry.io/docs/languages/java/exporters/#usage
  ***/
 @Configuration
-public class OtlpConfig {
+public class MyOtlpConfig {
 
     @Bean
     public OpenTelemetry openTelemetry(@Value("${tracing.url}") String endpoint,
@@ -48,6 +54,7 @@ public class OtlpConfig {
                 .registerMetricReader(
                         PeriodicMetricReader
                                 .builder(OtlpGrpcMetricExporter.builder().setEndpoint(endpoint).build())
+                                .setInterval(Duration.ofSeconds(5))
                                 .build())
                 .setResource(resource)
                 .build();
@@ -67,6 +74,27 @@ public class OtlpConfig {
         // install log agent in log appender
         OpenTelemetryAppender.install(openTelemetry);
         return openTelemetry;
+    }
+
+    @Bean
+    public MeterRegistry meterRegistry() {
+        OtlpConfig otlpConfig = new OtlpConfig() {
+            @Override
+            public String get(String key) {
+                return null;
+            }
+
+            @Override
+            public String url() {
+                return "http://localhost:4318/v1/metrics";
+            }
+
+            @Override
+            public Duration step() {
+                return Duration.ofSeconds(5);
+            }
+        };
+        return new OtlpMeterRegistry(otlpConfig, Clock.SYSTEM);
     }
 
     @Bean
