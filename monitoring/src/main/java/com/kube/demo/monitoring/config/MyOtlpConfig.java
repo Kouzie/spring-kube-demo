@@ -1,11 +1,8 @@
 package com.kube.demo.monitoring.config;
 
-import io.micrometer.core.instrument.Clock;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.registry.otlp.OtlpConfig;
-import io.micrometer.registry.otlp.OtlpMeterRegistry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.exporter.otlp.logs.OtlpGrpcLogRecordExporter;
@@ -28,6 +25,7 @@ import java.time.Duration;
 
 import static io.opentelemetry.semconv.ResourceAttributes.*;
 
+
 /**
  * https://opentelemetry.io/docs/languages/java/exporters/#usage
  ***/
@@ -41,7 +39,8 @@ public class MyOtlpConfig {
         Resource resource = Resource.getDefault().toBuilder()
                 .put(SERVICE_NAME, serviceName)
                 .put(SERVICE_NAMESPACE, "spring")
-                .put(SERVICE_VERSION, serviceVersion).build();
+                .put(SERVICE_VERSION, serviceVersion)
+                .build();
 
         SdkTracerProvider sdkTracerProvider = SdkTracerProvider.builder()
                 .addSpanProcessor(
@@ -61,7 +60,9 @@ public class MyOtlpConfig {
         SdkLoggerProvider sdkLoggerProvider = SdkLoggerProvider.builder()
                 .addLogRecordProcessor(
                         BatchLogRecordProcessor
-                                .builder(OtlpGrpcLogRecordExporter.builder().setEndpoint(endpoint).build())
+                                .builder(OtlpGrpcLogRecordExporter.builder()
+                                        .setEndpoint(endpoint)
+                                        .build())
                                 .build())
                 .setResource(resource)
                 .build();
@@ -77,6 +78,19 @@ public class MyOtlpConfig {
     }
 
     @Bean
+    public Meter customMeter(OpenTelemetry openTelemetry) {
+        return openTelemetry.meterBuilder("exampleMeter")
+                .setInstrumentationVersion("1.0.0")
+                .build();
+    }
+    @Bean
+    public Tracer customTracer(OpenTelemetry openTelemetry) {
+        return openTelemetry.tracerBuilder("exampleTracer")
+                .setInstrumentationVersion( "1.0.0")
+                .build();
+    }
+
+    /*@Bean
     public MeterRegistry meterRegistry() {
         OtlpConfig otlpConfig = new OtlpConfig() {
             @Override
@@ -95,13 +109,6 @@ public class MyOtlpConfig {
             }
         };
         return new OtlpMeterRegistry(otlpConfig, Clock.SYSTEM);
-    }
+    }*/
 
-    @Bean
-    public Meter customMeter(OpenTelemetry openTelemetry) {
-        Meter meter = openTelemetry.meterBuilder("instrumentation-library-name")
-                .setInstrumentationVersion("1.0.0")
-                .build();
-        return meter;
-    }
 }

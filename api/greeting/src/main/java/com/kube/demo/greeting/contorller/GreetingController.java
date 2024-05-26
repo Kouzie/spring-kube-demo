@@ -5,6 +5,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kube.demo.common.HelloJava;
 import com.kube.demo.greeting.client.CalculatingClient;
 import io.micrometer.core.instrument.*;
+import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Scope;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,13 +38,16 @@ public class GreetingController {
     // PrometheusMeterRegistry
     // prometheus micrometer exporter
     private final MeterRegistry registry;
+
+
     private Counter counter;
     private Gauge gauge;
     private AtomicLong result = new AtomicLong(0);
     private DistributionSummary summary;
     private Timer timer;
     // opentelemetry meter
-    private Meter meter;
+    private final Meter meter;
+    private final Tracer tracer;
 
     @PostConstruct
     private void init() {
@@ -79,8 +88,22 @@ public class GreetingController {
 
     @GetMapping
     public String greet() throws JsonProcessingException {
-        log.info("greet invoked");
-        counter.increment(1);
+        // Span 생성
+        Span span = tracer.spanBuilder("exampleSpan")
+                .setSpanKind(SpanKind.INTERNAL)
+                .startSpan();
+        // Span 내에서 작업 수행
+        try (Scope scope = span.makeCurrent()) {
+            // 수행할 작업
+            log.info("greet invoked");
+            counter.increment(1);
+            span.addEvent("count increment inside the span");
+        } catch (Exception e) {
+            span.setStatus(StatusCode.ERROR, "Exception occurred");
+            span.recordException(e);
+        } finally {
+            span.end();
+        }
         HelloJava helloJava = new HelloJava(greetingMessage + ", version:" + version, LocalDateTime.now());
         return objectMapper.writeValueAsString(helloJava);
     }
@@ -108,6 +131,7 @@ public class GreetingController {
 
     @GetMapping("/record")
     public String record() throws InterruptedException {
+        log.info("record invoked");
         // 작업 시작 전 시간 측정
         long startTime = System.nanoTime();
         Thread.sleep(1000); // 측정할 이벤트
