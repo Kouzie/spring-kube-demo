@@ -19,6 +19,15 @@ subprojects {
         mavenCentral()
     }
 
+    // Spring Boot 모듈인 경우 dependencyManagement 적용
+    plugins.withId('io.spring.dependency-management') {
+        dependencyManagement {
+            imports {
+                mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+            }
+        }
+    }
+
     dependencies {
         compileOnly 'org.projectlombok:lombok:1.18.26'
         annotationProcessor 'org.projectlombok:lombok:1.18.26'
