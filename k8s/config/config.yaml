@@ -7,7 +7,7 @@ metadata:
 
 data:
   application.properties: |-
-    TEST_STRING: "Hello Test"
     demo: "Hello Demo"
     calc.test: "Hello Calc"
+    TEST_STRING: "Hello Test"
     TRACING_URL: http://localhost:4317

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- K8s 표준 방식: stdout JSON 출력 → 외부 에이전트(Fluent Bit 등)가 수집 -->
+    <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp/>   <!-- @timestamp -->
+                <version/>     <!-- @version -->
+                <logLevel/>    <!-- level -->
+                <threadName/>  <!-- thread -->
+                <loggerName/>  <!-- logger -->
+                <message/>     <!-- message -->
+                <mdc/>         <!-- traceId, spanId (Micrometer/OTel이 MDC에 자동 주입) -->
+                <stackTrace/>  <!-- 예외 스택트레이스 JSON 구조화 -->
+            </providers>
+        </encoder>
+    </appender>
+
+    <root level="info">
+        <appender-ref ref="JSON_CONSOLE"/>
+    </root>
+</configuration>

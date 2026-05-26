@@ -1,4 +1,22 @@
 
+jib {
+    from {
+        image = 'amazoncorretto:17'
+    }
+    container {
+        environment = [
+            'LANG'  : 'ko_KR.UTF-8',
+            'LC_ALL': 'ko_KR.UTF-8',
+            'TZ'    : 'Asia/Seoul'
+        ]
+        jvmFlags = [
+            '-verbose:gc',
+            '-Xlog:gc*:stdout:time,uptime,level,tags',
+            '-Djava.security.egd=file:/dev/./urandom'
+        ]
+    }
+}
+
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     runtimeOnly 'org.postgresql:postgresql'

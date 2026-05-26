@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: region
+  profiles:
+    active: common,monitoring
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    type: com.zaxxer.hikari.HikariDataSource
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+  # cloud:
+  #   kubernetes:
+  #     config:
+  #       enabled: true
+  #       sources:
+  #         - namespace: spring
+  #           name: demo-config
+  #     client:
+  #       namespace: spring
+  #     reload:
+  #       enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always

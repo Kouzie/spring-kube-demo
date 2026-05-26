@@ -1,0 +1,188 @@
+apiVersion: opentelemetry.io/v1beta1
+kind: OpenTelemetryCollector
+metadata:
+  name: otel-collector
+  namespace: spring
+spec:
+  # daemonset: 노드당 1개 파드로 실행 — 해당 노드의 모든 컨테이너 로그를 수집
+  # sidecar 방식과 달리 앱 파드에 주입 불필요
+  mode: daemonset
+  # filelog receiver 는 contrib 배포판에만 포함됨 (기본 이미지에는 없음)
+  image: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib:0.152.0
+
+  # 노드 파일시스템의 로그 디렉터리를 컨테이너 안에 마운트
+  # /var/log/pods      : 실제 로그 파일 위치 (containerd가 여기에 씀)
+  # /var/log/containers: pods 경로로의 심볼릭 링크 모음 (조회 편의용)
+  volumeMounts:
+    - name: varlogpods
+      mountPath: /var/log/pods
+      readOnly: true
+    - name: varlogcontainers
+      mountPath: /var/log/containers
+      readOnly: true
+  volumes:
+    - name: varlogpods
+      hostPath:
+        path: /var/log/pods
+    - name: varlogcontainers
+      hostPath:
+        path: /var/log/containers
+
+  # 마스터 노드에도 스케줄링 허용 (단일 노드 kind 클러스터 대응)
+  tolerations:
+    - key: node-role.kubernetes.io/master
+      effect: NoSchedule
+
+  # v1beta1: config 가 문자열이 아닌 구조화된 YAML 객체
+  config:
+    receivers:
+      # -----------------------------------------------------------------------
+      # filelog: 노드 파일시스템에서 직접 로그 파일을 tail
+      # -----------------------------------------------------------------------
+      filelog:
+        include:
+          # 파일 경로 패턴: /var/log/pods/{namespace}_{pod}_{uid}/{container}/{번호}.log
+          # spring_* 로 spring 네임스페이스 파드만 필터링
+          - /var/log/pods/spring_*/*/*.log
+        start_at: beginning        # 파일 처음부터 읽기 (end 로 바꾸면 수집 시작 이후만)
+        include_file_path: true    # 파일 경로를 attributes["log.file.path"] 로 보존 (메타데이터 추출에 사용)
+        include_file_name: false   # 파일명 단독 저장은 불필요 (경로에 포함됨)
+
+        # operator: 읽은 각 줄을 순서대로 변환하는 파이프라인
+        # output 필드로 다음 operator 를 명시적으로 지정
+        operators:
+
+          # [1] containerd 로그 포맷 파싱
+          #     컨테이너 런타임(containerd)이 stdout/stderr 를 파일에 쓸 때 앞에 메타데이터를 붙임
+          #     포맷: "2024-01-01T00:00:00.000Z stdout F {실제 로그 내용}"
+          #            └─ time ──────────────┘ └────┘ └┘ └─ log ────────┘
+          #                                   stream flags
+          #     flags: P = Partial (줄이 길어서 분할됨), F = Full (마지막 조각 또는 단일 줄)
+          - type: regex_parser
+            id: parse-containerd
+            regex: '^(?P<time>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z)\s+(?P<stream>stdout|stderr)\s+(?P<flags>\S+)\s+(?P<log>.*)$'
+            timestamp:
+              parse_from: attributes.time
+              layout: '%Y-%m-%dT%H:%M:%S.%fZ'
+            output: recombine-partial
+
+          # [2] containerd P/F 분할 줄 재결합
+          #     JSON 한 줄이 16KB 를 넘으면 containerd 가 P 플래그로 여러 줄로 쪼갬
+          #     flags == "F" 인 줄이 올 때까지 combine_field(log) 를 이어붙임
+          #     같은 파일에서 온 줄끼리만 결합 (source_identifier)
+          - type: recombine
+            id: recombine-partial
+            combine_field: attributes.log
+            combine_with: ""                              # 분할된 줄 사이에 구분자 없이 그대로 붙임
+            is_last_entry: 'attributes.flags == "F"'
+            source_identifier: attributes["log.file.path"]
+            output: recombine-java-stacktrace
+
+          # [3] Java 스택트레이스 멀티라인 병합
+          #     logstash-logback-encoder 는 스택트레이스를 JSON 한 줄로 직렬화하지만
+          #     라이브러리가 System.err 에 직접 출력하는 경우 멀티라인이 될 수 있음
+          #     is_first_entry: { 로 시작하면 새 로그 항목 시작
+          #                       \tat com.example... / Caused by: 등은 이전 항목에 \n 으로 병합
+          - type: recombine
+            id: recombine-java-stacktrace
+            source_identifier: attributes["log.file.path"]
+            combine_field: attributes.log
+            combine_with: "\n"
+            is_first_entry: 'attributes.log matches "^\\s*\\{"'
+            output: extract-k8s-metadata
+
+          # [4] 파일 경로 regex 로 K8s 메타데이터 추출
+          #     /var/log/pods/spring_region-app-xxxxx_uid/region-app/0.log
+          #                   └namespace┘ └─pod_name──┘  └container┘
+          #     추출 결과는 일단 attributes.* 에 저장됨
+          - type: regex_parser
+            id: extract-k8s-metadata
+            parse_from: attributes["log.file.path"]
+            regex: '^/var/log/pods/(?P<namespace>[^_]+)_(?P<pod_name>[^_]+)_[a-f0-9-]+/(?P<container_name>[^/]+)/\d+\.log$'
+            output: move-namespace
+
+          # [5~7] attributes → resource 로 이동
+          #       K8s 메타데이터는 OTel 데이터 모델상 resource 위치에 있어야
+          #       Grafana / Loki / Tempo 등이 표준 레이블로 인식함
+          #       attributes 에 그냥 두면 데이터는 있지만 K8s 리소스로 연결 안 됨
+          - type: move
+            id: move-namespace
+            from: attributes.namespace
+            to: resource["k8s.namespace.name"]
+            output: move-pod
+
+          - type: move
+            id: move-pod
+            from: attributes.pod_name
+            to: resource["k8s.pod.name"]
+            output: move-container
+
+          - type: move
+            id: move-container
+            from: attributes.container_name
+            to: resource["k8s.container.name"]
+            output: parse-json-body
+
+          # [8] logback-console.xml 이 출력한 JSON body 파싱
+          #     {"@timestamp":"...","level":"INFO","message":"...",...} 구조를 attributes 로 풀어냄
+          #     on_error: send — JSON 파싱 실패해도 드롭하지 않고 원본 문자열 그대로 전송
+          - type: json_parser
+            id: parse-json-body
+            parse_from: attributes.log
+            on_error: send
+
+      # -----------------------------------------------------------------------
+      # otlp: 앱이 SDK 로 직접 전송하는 trace / metrics / logs 수신 (gRPC 4317)
+      # -----------------------------------------------------------------------
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+
+      # -----------------------------------------------------------------------
+      # prometheus: actuator /actuator/prometheus 스크래핑
+      # -----------------------------------------------------------------------
+      prometheus:
+        config:
+          scrape_configs:
+            - job_name: spring-kube-demo
+              scrape_interval: 1m
+              static_configs:
+                - targets: ["0.0.0.0:9404"]   # monitoring 모듈 actuator 포트
+              metrics_path: /actuator/prometheus
+
+    processors:
+      # batch: 이벤트를 모아서 한 번에 전송 — 네트워크 비용 절감
+      batch: {}
+
+      # resource: 모든 telemetry 에 클러스터 이름 태그 추가
+      resource:
+        attributes:
+          - action: insert
+            key: k8s.cluster.name
+            value: kind
+
+    exporters:
+      # debug: collector 자체 로그에 수집 데이터 출력 (디버깅용, logging exporter 는 deprecated)
+      debug: {}
+
+      # otlp: 중앙 OTel Collector 로 전달 (모니터링 네임스페이스에 별도 운영)
+      otlp:
+        endpoint: "http://opentelemetry-collecor-opentelemetry-collector.monitoring.svc.cluster.local:4317"
+        tls:
+          insecure: true   # 클러스터 내부 통신이므로 TLS 불필요
+
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [debug, otlp]
+        logs:
+          receivers: [filelog, otlp]   # 파일 수집 + SDK 직접 전송 둘 다 받음
+          processors: [batch, resource]
+          exporters: [debug, otlp]
+        metrics:
+          receivers: [otlp, prometheus]
+          processors: [batch]
+          exporters: [debug, otlp]

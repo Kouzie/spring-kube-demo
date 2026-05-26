@@ -27,18 +27,6 @@ spec:
           image: ${REGISTRY_URL}/calculating:latest
           # image: calculating
           # imagePullPolicy: Never # 이미지가 로컬에 존재할 경우
-          livenessProbe:
-            httpGet:
-              path: /actuator/health/liveness
-              port: 9404
-            initialDelaySeconds: 15
-            periodSeconds: 15
-          readinessProbe:
-            httpGet:
-              path: /actuator/health/readiness
-              port: 9404
-            initialDelaySeconds: 15
-            periodSeconds: 15
           ports:
             - containerPort: 8080
 ---
@@ -74,18 +62,6 @@ spec:
               value: "true"
           # image: calculating
           # imagePullPolicy: Never # 이미지가 로컬에 존재할 경우
-          livenessProbe:
-            httpGet:
-              path: /actuator/health/liveness
-              port: 9404
-            initialDelaySeconds: 15
-            periodSeconds: 15
-          readinessProbe:
-            httpGet:
-              path: /actuator/health/readiness
-              port: 9404
-            initialDelaySeconds: 15
-            periodSeconds: 15
           ports:
             - containerPort: 8080
 ---

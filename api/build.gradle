@@ -21,7 +21,7 @@ subprojects {
 
     jib {
         from {
-            image = 'docker.io/library/openjdk:17'
+            image = 'eclipse-temurin:17-jre'
         }
         to {
             image = "${url}/${project.name}"

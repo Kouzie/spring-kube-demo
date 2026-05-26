@@ -38,18 +38,6 @@ spec:
                 secretKeyRef:
                   key: db-password
                   name: db-config
-          readinessProbe:
-            httpGet:
-              port: 8080
-              path: /health
-            initialDelaySeconds: 15
-            periodSeconds: 30
-          livenessProbe:
-            httpGet:
-              port: 8080
-              path: /health
-            initialDelaySeconds: 30
-            periodSeconds: 30
           resources:
             requests:
               cpu: 100m

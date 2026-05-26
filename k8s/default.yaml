@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: spring
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: regcred
+  namespace: spring
+type: kubernetes.io/dockerconfigjson
+stringData:
+  .dockerconfigjson: '{"auths":{"kind-registry:5000":{"username":"test","password":"test","auth":"dGVzdDp0ZXN0"}}}'

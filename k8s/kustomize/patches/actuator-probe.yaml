@@ -1,0 +1,18 @@
+# JSON Patch: 컨테이너 이름 무관하게 첫 번째 컨테이너에 probe 주입
+# calc, greet, region 모두 동일한 파일 재사용
+- op: add
+  path: /spec/template/spec/containers/0/livenessProbe
+  value:
+    httpGet:
+      path: /actuator/health/liveness
+      port: 9404
+    initialDelaySeconds: 15
+    periodSeconds: 15
+- op: add
+  path: /spec/template/spec/containers/0/readinessProbe
+  value:
+    httpGet:
+      path: /actuator/health/readiness
+      port: 9404
+    initialDelaySeconds: 15
+    periodSeconds: 15

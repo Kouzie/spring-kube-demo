@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: calculating
+  profiles:
+    active: common,monitoring
+  config:
+    import:
+      - "kubernetes:"
+  cloud:
+    kubernetes:
+      config:
+        name: demo-config
+        namespace: spring
+
+test:
+  string: ${TEST_STRING}
+
+is:
+  poison: ${IS_POISON:false}

@@ -1,0 +1,30 @@
+spring:
+  main:
+    banner-mode: off
+
+# logback-console.xml : stdout JSON (K8s 표준, Fluent Bit 등 외부 에이전트 수집)
+# logback-otlp.xml    : stdout JSON + OTel Collector 직접 전송
+logging:
+  config: classpath:logback-console.xml
+
+management:
+  endpoint:
+    health:
+      enabled: true
+      probes:
+        enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: prometheus,health
+  server:
+    port: 9404
+  metrics:
+    tags:
+      service-name: ${spring.application.name}
+  otlp:
+    tracing:
+      endpoint: http://localhost:4318/v1/tracing
+
+tracing:
+  url: ${TRACING_URL:http://localhost:4317}

@@ -1,0 +1,28 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - deploy/greet-deployment.yaml
+  - deploy/calc-deployment.yaml
+  - deploy/region-deployment.yaml
+
+# Strategic Merge Patch: 기존 리소스에 필드를 추가/덮어씌움
+# target 으로 적용 대상 Deployment 를 지정, 같은 패치 파일을 여러 타겟에 재사용 가능
+patches:
+  # 동일한 패치 파일을 모든 Deployment에 재사용 (JSON Patch로 컨테이너 이름 무관)
+  - path: kustomize/patches/actuator-probe.yaml
+    target:
+      kind: Deployment
+      name: greet-deployment
+  - path: kustomize/patches/actuator-probe.yaml
+    target:
+      kind: Deployment
+      name: calc-deployment-normal
+  - path: kustomize/patches/actuator-probe.yaml
+    target:
+      kind: Deployment
+      name: calc-deployment-poison
+  - path: kustomize/patches/actuator-probe.yaml
+    target:
+      kind: Deployment
+      name: region-app
